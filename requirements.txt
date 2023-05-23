@@ -1,0 +1,6 @@
+plotly
+Pillow
+pyjanitor
+pandas
+numpy
+streamlit
