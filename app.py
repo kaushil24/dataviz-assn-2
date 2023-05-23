@@ -79,7 +79,7 @@ for key, val in rename_str.items():
 
 
 st.title("How is SCU disposing its waste?")
-st.text("A story through graphs..")
+st.text("Understanding how correctly are we disposing our waste and how can we improve?\nA story through graphs..")
 
 # ------------ Bird's eye view ---------
 st.header("Bird's eye view")
@@ -88,8 +88,10 @@ fig.update_layout(title='Waste Characterization of individual building at SCU')
 st.plotly_chart(fig, theme=None)
 
 # ----------- intermediate stage -------------
-subdf = df.loc[:]
 building = None
+building = st.selectbox('Building', df[BUILDING].unique().tolist() + ['SCU'])
+building = None if building == 'SCU' else building
+subdf = df.loc[df[BUILDING] == building, :] if building else df
 
 # ----------- How are we doing with disposig waste corredctly -----------
 st.header('How good are we doing disposing waste correctly?')
@@ -135,14 +137,14 @@ st.plotly_chart(fig, theme=None)
 wts = tempdf1.loc[0:2, WASTE_TYPE]
 wgs = tempdf1.loc[0:2, WEIGHT]
 percs = tempdf1.loc[0:2, '%']
-st.caption(
-    f'* **{style_waste_st[wts[0]]}** {emoji_waste[wts[0]]} is the most misclassified waste type ammounting for **{wgs[0]} pounds** that is **{percs[0]:.2f}%**',
-    unsafe_allow_html=False
-)
-st.caption(
-    f'* **{style_waste_st[wts[1]]}** {emoji_waste[wts[1]]} is the second most misclassified waste type ammounting for **{wgs[1]} pounds** that is **{percs[1]:.2f}%**',
-    unsafe_allow_html=False
-)
+# st.caption(
+#     f'* **{style_waste_st[wts[0]]}** {emoji_waste[wts[0]]} is the most misclassified waste type ammounting for **{wgs[0]} pounds** that is **{percs[0]:.2f}%**',
+#     unsafe_allow_html=False
+# )
+# st.caption(
+#     f'* **{style_waste_st[wts[1]]}** {emoji_waste[wts[1]]} is the second most misclassified waste type ammounting for **{wgs[1]} pounds** that is **{percs[1]:.2f}%**',
+#     unsafe_allow_html=False
+# )
 
 # ------- level: substream -----------
 st.subheader('What Substream of waste are we throwing wrongly? And frequent misclassifications.')
@@ -237,10 +239,32 @@ if wts and optns:
 
     st.text('So, how do we do that?')
 # ------------- Solution --------------
-    st.subheader('Solution')
+st.title('Solution')
+st.markdown("### So **how** do we educate people?")
+st.markdown("Let's understand the proportion of different waste types in each bins.")
+# ÷col0, col1, col2 = st.columns([3,3,3])
+fig = plot_waste_division(subdf, 'Compost', building)#, 'Facilities')
+st.plotly_chart(fig, use_container_width=True)
+fig = plot_waste_division(subdf, 'Landfill', building)#, 'Facilities')
+st.plotly_chart(fig, use_container_width=True)
+fig = plot_waste_division(subdf, 'Recycling', building)#, 'Facilities')
+st.plotly_chart(fig, use_container_width=True)
+
+st.markdown("Now that we know the different types of waste that are wrongly thrown in the different bins;")
+st.markdown("We can create personalized posters for each building depicting the most frequently occuring substream mis-characterinzation for each bin.")
 
 
+bld_img_map = {
+   'Facilities': 'fc',
+   'Swig': 'sw', 
+   'Vari Hall and Lucas Hall': 'vh',
+   'Malley': 'ml',
+    'University Villas': 'uv',
+    'Graham': 'gm',
+    'Benson Center': 'bc',
+    'Learning Commons': 'lc',
+}
 
-image = Image.open('Media/SCU (1).png')
+image = Image.open(f'Media/DO NOT THROW/{bld_img_map.get(building, "SCU")}.png')
 
 st.image(image, caption='Sunrise by the mountains')

@@ -132,3 +132,44 @@ def plot_disposed_in_graph(df: pd.DataFrame, keys):
     fig.update_yaxes(title_text='Waste Types')
     fig.update_layout(title="Waste Types, Substreams and how they're <b>Wrongly</b> Disposed In different bins")
     return fig, wtdf
+
+def get_wrong_waste_agg_df(df: pd.DataFrame, bin_name: str, building_name: str = None):
+    if not building_name:
+        group_df = df.loc[df[WASTE_TYPE]!=df[DISPOSED_IN], :].groupby([DISPOSED_IN,WASTE_TYPE, SUBSTREAM]).agg({WEIGHT: 'sum'})[WEIGHT].reset_index()
+    else:
+        group_df = df.loc[(df[WASTE_TYPE]!=df[DISPOSED_IN]) & (df[BUILDING]==building_name), :].groupby([DISPOSED_IN,WASTE_TYPE, SUBSTREAM]).agg({WEIGHT: 'sum'})[WEIGHT].reset_index()
+    group_df
+    wtdf = group_df.loc[group_df[DISPOSED_IN]==bin_name] # waste type df
+    return wtdf
+
+
+def plot_waste_division(df, bin_name: str, building_name: str = None):
+    wtdf = get_wrong_waste_agg_df(df, bin_name, building_name)
+    per_bin_max_elements=5
+
+    # ------ optional code to select only top n rows within each group -------
+    idx2keep = []
+    for wt in wtdf[WASTE_TYPE].unique():
+        idx2keep.extend(wtdf.loc[wtdf[WASTE_TYPE]==wt, :].sort_values(WEIGHT, ascending=False)[:per_bin_max_elements].index.tolist())
+
+    wtdf = wtdf.loc[idx2keep, :]
+    # ----------------------------------------------------------------------
+
+    fig = make_subplots(rows=1, cols=1)
+
+    fig.add_trace(
+        go.Bar(
+            y=[wtdf[WASTE_TYPE].tolist(), wtdf[SUBSTREAM].tolist()],
+            x=wtdf[WEIGHT],
+            orientation='h',
+            marker={'color': [clr_map_mld[clr] for clr in wtdf[WASTE_TYPE].tolist()]},
+        )
+    )
+
+    title = f'Different of types of waste wrongly thrown into the <b style="color:{clr_map_bld[bin_name]};">{bin_name}</b> bin '
+    title+= f'for <b>{building_name}</b> building' if building_name else ''
+    fig.update_xaxes(title_text='Weight (in pounds)')
+    fig.update_yaxes(title_text='Waste Type')
+    fig.update_layout(title=title)
+
+    return fig
