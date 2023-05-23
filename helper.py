@@ -2,7 +2,6 @@ import pandas as pd
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import plotly.express as px
-import fivecentplots as fcp
 import janitor
 import typing
 import numpy as np
